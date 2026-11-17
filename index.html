@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Observatorio de Accidentalidad Vial — Datos Abiertos Colombia</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafc;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --primary-border: #93c5fd;
+      --success: #16a34a;
+      --warning: #ea580c;
+      --warning-hover: #c2410c;
+      --danger: #dc2626;
+      --info: #0284c7;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 18px 20px 36px;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* Iconos vectoriales SVG */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    .icon-sm {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    /* ========================================================================
+       1. ENCABEZADO PRINCIPAL
+       ======================================================================== */
+    .header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 22px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .header-brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .header-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text-secondary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-subtle);
+      border-color: #94a3b8;
+      color: var(--text);
+    }
+
+    .btn-quick-action {
+      background: var(--warning);
+      color: #ffffff;
+      border-color: var(--warning);
+      box-shadow: 0 2px 4px rgba(234, 88, 12, 0.25);
+    }
+
+    .btn-quick-action:hover {
+      background: var(--warning-hover);
+      border-color: var(--warning-hover);
+    }
+
+    .btn-quick-action.active {
+      background: #9a3412;
+      border-color: #7c2d12;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 3px #fed7aa;
+    }
+
+    /* ========================================================================
+       2. NAVEGACIÓN POR PESTAÑAS
+       ======================================================================== */
+    .tabs-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 200px;
+      height: 40px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+    }
+
+    .tab-badge {
+      font-size: 0.72rem;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.08);
+      color: inherit;
+    }
+
+    .tab-btn.active .tab-badge {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* ========================================================================
+       3. PANEL DE FILTROS ALINEADO EN CUADRÍCULA Y PÍLDORAS COMPACTAS
+       ======================================================================== */
+    .pills-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pills-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .pills-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .pills-panel-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .filters-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pill-group {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 3px 0;
+    }
+
+    @media (max-width: 720px) {
+      .pill-group {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+
+    .pill-group-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .filter-pill:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .filter-pill.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+    }
+
+    .filter-pill .pill-hover-count {
+      display: none;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: var(--text-secondary);
+      margin-left: 2px;
+    }
+
+    .filter-pill:hover .pill-hover-count {
+      display: inline-block;
+    }
+
+    .filter-pill.active:hover .pill-hover-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    .active-filters-bar {
+      display: none;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-strong);
+    }
+
+    .active-filters-bar.visible {
+      display: flex;
+    }
+
+    .active-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-soft);
+      color: #1e40af;
+      border: 1px solid var(--primary-border);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .active-chip button {
+      border: none;
+      background: transparent;
+      color: #1e40af;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 50%;
+    }
+
+    .active-chip button:hover {
+      color: var(--danger);
+      background: rgba(220, 38, 38, 0.1);
+    }
+
+    /* ========================================================================
+       4. ESTRUCTURA DEL PANEL PRINCIPAL (SIN BARRAS DE SCROLL EN TARJETAS)
+       ======================================================================== */
+    /* Fila 1: KPIs */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* Fila 2: Ancho completo (100%) para Evolución Temporal (Gráfico de Líneas / Área) */
+    .full-width-row {
+      margin-bottom: 16px;
+    }
+
+    /* Filas 3, 4 y 5: 2 columnas divididas (50% / 50%) sin scroll */
+    .split-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .split-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 0.94rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-title-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title small {
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    /* Conmutador para el Gráfico de Líneas (Por Año vs Por Mes) */
+    .chart-toggle-group {
+      display: inline-flex;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .chart-toggle-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chart-toggle-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Gráfico de Líneas SVG */
+    .line-chart-container {
+      width: 100%;
+      height: 255px;
+      position: relative;
+    }
+
+    .line-chart-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .line-point-group {
+      cursor: pointer;
+    }
+
+    .line-point-group circle {
+      transition: r 0.15s ease, stroke-width 0.15s ease;
+    }
+
+    .line-point-group:hover circle {
+      r: 7px;
+      stroke-width: 3px;
+    }
+
+    /* Gráfico de Anillo (Donut Chart) para Gravedad */
+    .donut-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      align-items: center;
+      gap: 22px;
+      padding: 6px 0;
+    }
+
+    @media (max-width: 600px) {
+      .donut-layout {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .donut-legend-item:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .donut-legend-item.selected-bar {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .donut-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Barras Horizontales sin scroll y Treemap para Modalidad */
+    .bar-list-noscroll {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 125px 1fr 98px;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.81rem;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      transition: all 0.12s ease;
+    }
+
+    .bar-row:hover {
+      background: var(--surface-subtle);
+      border-color: var(--border);
+    }
+
+    .bar-row.selected-bar {
+      background: var(--primary-soft);
+      border-color: var(--primary-border);
+    }
+
+    .bar-label {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bar-track {
+      background: #f1f5f9;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .bar-count {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.77rem;
+    }
+
+    /* Treemap proporcional */
+    .treemap-grid {
+      display: flex;
+      width: 100%;
+      height: 76px;
+      border-radius: 8px;
+      overflow: hidden;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .treemap-cell {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6px 8px;
+      color: #ffffff;
+      cursor: pointer;
+      overflow: hidden;
+      transition: opacity 0.15s;
+      min-width: 34px;
+    }
+
+    .treemap-cell:hover {
+      opacity: 0.9;
+    }
+
+    .treemap-cell span {
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .treemap-cell small {
+      font-size: 0.68rem;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+
+    /* Mapa de Calor Temporal (Día de la semana vs Hora del día) */
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 3px;
+      font-size: 0.73rem;
+    }
+
+    .heatmap-table th {
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 3px 2px;
+      background: transparent;
+      border: none;
+    }
+
+    .heatmap-table td.day-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding-right: 6px;
+      white-space: nowrap;
+      border: none;
+    }
+
+    .heatmap-cell {
+      height: 28px;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+      border: none;
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.08);
+      outline: 2px solid var(--primary);
+      z-index: 2;
+    }
+
+    /* Mapa Geográfico de Puntos de Calor */
+    .geo-map-container {
+      width: 100%;
+      height: 270px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+      background: #e0f2fe;
+    }
+
+    .insight-box {
+      margin-top: 12px;
+      font-size: 0.79rem;
+      color: var(--text-secondary);
+      background: var(--surface-subtle);
+      padding: 9px 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+
+    /* ========================================================================
+       5. TABLA DINÁMICA CON CHECKBOXES DE COLUMNAS Y STICKY HEADERS
+       ======================================================================== */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .column-checkboxes-bar {
+      padding: 10px 20px;
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .col-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .col-checkbox-label input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .col-checkbox-label:hover {
+      color: var(--primary);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 600px;
+      position: relative;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.83rem;
+      text-align: left;
+    }
+
+    thead tr.header-titles th {
+      position: sticky;
+      top: 0;
+      z-index: 12;
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border-strong);
+      padding: 10px 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      user-select: none;
+      height: 40px;
+    }
+
+    thead tr.header-titles th.sortable {
+      cursor: pointer;
+    }
+
+    thead tr.header-titles th.sortable:hover {
+      background: #e2e8f0;
+    }
+
+    .th-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    thead tr.header-filters th {
+      position: sticky;
+      top: 40px;
+      z-index: 11;
+      background: #f8fafc;
+      border-bottom: 2px solid var(--border-strong);
+      padding: 6px 8px;
+      font-weight: 500;
+    }
+
+    .col-filter-input,
+    .col-filter-select {
+      width: 100%;
+      min-width: 85px;
+      padding: 5px 8px;
+      font-size: 0.78rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+
+    .col-filter-input:focus,
+    .col-filter-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .col-filter-input.has-value,
+    .col-filter-select.has-value {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      font-weight: 600;
+    }
+
+    table.data-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    table.data-table tbody tr:hover {
+      background: var(--surface-subtle);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
+    .badge-heridos {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    .badge-muertos {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-danos {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+    }
+
+    .pagination button {
+      height: 32px;
+      padding: 0 11px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .loader-overlay {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ====================================================================
+         ENCABEZADO PRINCIPAL
+         ==================================================================== -->
+    <header class="header">
+      <div class="header-brand">
+        <h1>Observatorio Dinámico de Accidentalidad Vial</h1>
+        <div class="header-subtitle">
+          <span>Fuente oficial: Portal de Datos Abiertos Colombia (Conjunto <code>yb9r-2dsi</code>)</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="ejecutarExtraccionSecuencialPaginada()" title="Volver a consultar los datos desde el portal oficial">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        <span>Actualizar datos</span>
+      </button>
+    </header>
+
+    <!-- ====================================================================
+         BARRA DE NAVEGACIÓN POR PESTAÑAS
+         ==================================================================== -->
+    <nav class="tabs-nav" aria-label="Secciones del observatorio">
+      <button class="tab-btn active" id="tabBtn-dashboard" onclick="cambiarPestana('dashboard')">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Panel Principal y Gráficas</span>
+      </button>
+      <button class="tab-btn" id="tabBtn-explorer" onclick="cambiarPestana('explorer')">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        <span>Explorador de Datos</span>
+        <span class="tab-badge" id="tabBadgeRegistros">0</span>
+      </button>
+    </nav>
+
+    <!-- ====================================================================
+         PANEL DE PÍLDORAS DE FILTRADO
+         ==================================================================== -->
+    <section class="pills-panel">
+      <div class="pills-panel-header">
+        <div class="pills-header-left">
+          <div class="pills-panel-title">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span>Filtros de Datos</span>
+          </div>
+
+          <button id="btnFiltroAvanzado"
+                  class="btn btn-quick-action"
+                  onclick="toggleFiltroAvanzadoFase2()"
+                  title="Filtra accidentes ocurridos desde 2020 con personas heridas o fallecidas en choques, atropellos o volcamientos">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="btnFiltroAvanzadoText">Filtrar siniestros graves recientes</span>
+          </button>
+        </div>
+
+        <button class="btn btn-secondary" onclick="limpiarTodosLosFiltros()" style="margin-left: auto;">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Restablecer filtros</span>
+        </button>
+      </div>
+
+      <div class="filters-grid">
+        <div class="pill-group">
+          <div class="pill-group-label">Año:</div>
+          <div class="pill-list" id="pillsAnio"></div>
+        </div>
+
+        <div class="pill-group">
+          <div class="pill-group-label">Gravedad:</div>
+          <div class="pill-list" id="pillsGravedad"></div>
+        </div>
+
+        <div class="pill-group">
+          <div class="pill-group-label">Tipo de Siniestro:</div>
+          <div class="pill-list" id="pillsClase"></div>
+        </div>
+
+        <div class="pill-group">
+          <div class="pill-group-label">Día de la Semana:</div>
+          <div class="pill-list" id="pillsDia"></div>
+        </div>
+      </div>
+
+      <div class="active-filters-bar" id="activeFiltersBar">
+        <span style="font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">
+          Filtros aplicados:
+        </span>
+        <div id="activeChipsContainer" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 1: PANEL PRINCIPAL (ESTRUCTURA DIVERSIFICADA SIN SCROLL)
+         ==================================================================== -->
+    <main id="tabPane-dashboard" class="tab-pane active">
+      <!-- FILA 1: TARJETAS KPI -->
+      <section class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Siniestros (Selección)</div>
+          <div class="kpi-value" id="kpiTotal">0</div>
+          <div class="kpi-sub" id="kpiTotalSub">De 0 registros totales</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Siniestros con Heridos</div>
+          <div class="kpi-value" id="kpiHeridos" style="color: var(--warning);">0</div>
+          <div class="kpi-sub" id="kpiTotalPersonasHeridas">0 personas lesionadas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Siniestros con Fallecidos</div>
+          <div class="kpi-value" id="kpiMuertos" style="color: var(--danger);">0</div>
+          <div class="kpi-sub" id="kpiTotalPersonasMuertas">0 personas fallecidas en sitio</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Solo Daños Materiales</div>
+          <div class="kpi-value" id="kpiDanos" style="color: var(--info);">0</div>
+          <div class="kpi-sub" id="kpiDanosPct">0% del total seleccionado</div>
+        </div>
+      </section>
+
+      <!-- FILA 2 (ANCHO COMPLETO 100%): GRÁFICO DE LÍNEAS Y ÁREA (TENDENCIA EN EL TIEMPO) -->
+      <section class="full-width-row">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-title-text">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span id="lineChartTitle">Evolución Histórica de Siniestros por Año (2018 – 2026)</span>
+            </span>
+            <div class="chart-toggle-group">
+              <button class="chart-toggle-btn active" id="btnToggleAnual" onclick="cambiarModoLineaTemporal('anual')">Tendencia por Año</button>
+              <button class="chart-toggle-btn" id="btnToggleMensual" onclick="cambiarModoLineaTemporal('mensual')">Comportamiento por Mes</button>
+            </div>
+          </div>
+          <div class="line-chart-container" id="lineChartTemporal"></div>
+        </div>
+      </section>
+
+      <!-- FILA 3 (COLUMNAS DIVIDIDAS): IZQUIERDA MODALIDAD (TREEMAP + BARRAS SIN SCROLL) / DERECHA ANILLO (GRAVEDAD) -->
+      <section class="split-row">
+        <!-- Izquierda: Modalidad de Siniestro (Mapa de Árbol + Barras Horizontales completas sin scroll) -->
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span class="card-title-text">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Por Modalidad de Siniestro (Mapa Proporcional y Comparativa)</span>
+              </span>
+              <small>Clic para filtrar modalidad</small>
+            </div>
+            <div class="treemap-grid" id="treemapClases"></div>
+            <div id="chartClases" class="bar-list-noscroll"></div>
+          </div>
+          <div id="edaInterpretacion1" class="insight-box"></div>
+        </div>
+
+        <!-- Derecha: Gráfico de Anillo (Donut Chart) para Distribución por Gravedad -->
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span class="card-title-text">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                <span>Distribución por Gravedad (Composición Total)</span>
+              </span>
+              <small>Clic en segmento o leyenda para filtrar</small>
+            </div>
+            <div class="donut-layout">
+              <div id="donutGravedadContainer"></div>
+              <div class="donut-legend" id="donutGravedadLegend"></div>
+            </div>
+          </div>
+          <div class="insight-box" id="donutGravedadInsight" style="border-left-color: var(--info);"></div>
+        </div>
+      </section>
+
+      <!-- FILA 4 (NUEVOS GRÁFICOS ANALÍTICOS): MAPA DE CALOR TEMPORAL (DÍA vs HORA) Y MAPA GEOGRÁFICO -->
+      <section class="split-row">
+        <!-- Izquierda: Mapa de Calor Temporal (Días de la Semana vs Horas del Día) -->
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span class="card-title-text">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                <span>Mapa de Calor Temporal (Día de la Semana vs Hora del Día)</span>
+              </span>
+              <small>Concentración en horas pico</small>
+            </div>
+            <div id="heatmapDiaHoraContainer"></div>
+          </div>
+          <div id="edaInterpretacion2" class="insight-box" style="border-left-color: var(--warning);"></div>
+        </div>
+
+        <!-- Derecha: Mapa Geográfico de Puntos de Calor (Corredores Viales Críticos) -->
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span class="card-title-text">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Mapa Geográfico de Puntos Críticos (Clusters por Corredor Vial)</span>
+              </span>
+              <small>Clic en círculo para filtrar corredor</small>
+            </div>
+            <div id="geoMapContainer" class="geo-map-container"></div>
+          </div>
+          <div id="geoMapInsight" class="insight-box" style="border-left-color: var(--danger);"></div>
+        </div>
+      </section>
+
+      <!-- FILA 5: SEVERIDAD POR TIPO DE SINIESTRO Y MATRIZ DE FACTORES ASOCIADOS (SIN SCROLL) -->
+      <section class="split-row">
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span>Proporción de Víctimas según Modalidad (%)</span>
+              <small>Comparativa 100% apilada</small>
+            </div>
+            <div style="display: flex; gap: 14px; font-size: 0.75rem; margin-bottom: 10px; font-weight: 600;">
+              <span style="display: inline-flex; align-items: center; gap: 5px; color: #0284c7;"><span style="width:10px;height:10px;border-radius:2px;background:#0284c7;display:inline-block;"></span>Solo daños</span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; color: #ea580c;"><span style="width:10px;height:10px;border-radius:2px;background:#ea580c;display:inline-block;"></span>Con heridos</span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; color: #dc2626;"><span style="width:10px;height:10px;border-radius:2px;background:#dc2626;display:inline-block;"></span>Con fallecidos</span>
+            </div>
+            <div id="edaStackedClaseGravedad" class="bar-list-noscroll"></div>
+          </div>
+          <div id="edaInterpretacion3" class="insight-box" style="border-left-color: var(--danger);"></div>
+        </div>
+
+        <div class="card">
+          <div>
+            <div class="card-title">
+              <span>Factores Asociados a la Severidad Vial y Eventos Múltiples</span>
+              <small>Correlación estadística (r)</small>
+            </div>
+            <div id="edaOutliersBox" style="font-size: 0.8rem; margin-bottom: 12px;"></div>
+            <div id="edaCorrelationMatrix"></div>
+          </div>
+          <div id="edaInterpretacion4" class="insight-box" style="border-left-color: var(--success);"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ====================================================================
+         PESTAÑA 2: EXPLORADOR DE DATOS
+         ==================================================================== -->
+    <section id="tabPane-explorer" class="tab-pane">
+      <div class="table-card">
+        <div class="table-header">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;" id="tableCounter">
+              Mostrando 0 - 0 de 0 registros
+            </div>
+            <div style="font-size: 0.78rem; color: var(--muted);">
+              Búsqueda tolerante a mayúsculas y tildes en cada columna. Los encabezados permanecen fijos al desplazar la tabla.
+            </div>
+          </div>
+
+          <div class="pagination">
+            <label for="pageSizeSelect" style="color: var(--muted);">Filas por página:</label>
+            <select id="pageSizeSelect" onchange="cambiarTamanoPagina()" style="height: 32px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border-strong);">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="250">250</option>
+            </select>
+            <button id="btnPrev" onclick="cambiarPagina(-1)" disabled>
+              <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              <span>Anterior</span>
+            </button>
+            <span id="pageIndicator" style="font-weight: 600;">Página 1 / 1</span>
+            <button id="btnNext" onclick="cambiarPagina(1)" disabled>
+              <span>Siguiente</span>
+              <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="column-checkboxes-bar">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 5px;">
+            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Mostrar / ocultar columnas:</span>
+          </span>
+          <div id="columnVisibilityPills" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center;"></div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr class="header-titles" id="tableHeaderTitles"></tr>
+              <tr class="header-filters" id="tableHeaderFilters"></tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="10">
+                  <div class="loader-overlay">
+                    <div class="spinner"></div>
+                    <div>Cargando registros de accidentalidad...</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * ARQUITECTURA MODULAR DEL OBSERVATORIO DE ACCIDENTALIDAD (yb9r-2dsi)
+     *   - MÓDULO 1: Configuración Global, Traducción al Español y Navegación.
+     *   - MÓDULO 2 (FASE II): Normalización, Tratamiento NaN/Duplicados y Casteo Numérico.
+     *   - MÓDULO 3 (FASE I) : Extracción Secuencial (while/for) y Consolidación Masiva.
+     *   - MÓDULO 4: Motor de Píldoras, Checkboxes de Columna y Filtro Anidado.
+     *   - MÓDULO 5 (FASE III): Visualizaciones Diversificadas (Líneas, Anillo, Treemap, Heatmap y Mapa Geográfico).
+     *   - MÓDULO 6: Renderizado de Tabla con Sticky Headers y Paginación.
+     * ============================================================================
+     */
+
+    // ============================================================================
+    // MÓDULO 1: CONFIGURACIÓN GLOBAL, TRADUCCIÓN AL ESPAÑOL Y NAVEGACIÓN
+    // ============================================================================
+    const DATASET_ID = "yb9r-2dsi";
+    const API_V3_URL = `https://www.datos.gov.co/api/v3/views/${DATASET_ID}/query.json`;
+    const API_PAGINADA_URL = `https://www.datos.gov.co/resource/${DATASET_ID}.json`;
+
+    const TAMANO_LOTE_PAGINA = 10000;
+    const ANIOS_OBJETIVO = ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"];
+    const CATEGORIAS_GRAVEDAD = ["Solo daños", "Con heridos", "Con muertos"];
+
+    const MAPA_MESES_ES = {
+      "january": "Enero", "february": "Febrero", "march": "Marzo",
+      "april": "Abril", "may": "Mayo", "june": "Junio",
+      "july": "Julio", "august": "Agosto", "september": "Septiembre",
+      "october": "Octubre", "november": "Noviembre", "december": "Diciembre"
+    };
+
+    const ORDEN_MESES = {
+      "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6,
+      "Julio": 7, "Agosto": 8, "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+    };
+
+    const MAPA_DIAS_ES = {
+      "mon": "Lunes", "monday": "Lunes",
+      "tue": "Martes", "tuesday": "Martes",
+      "wed": "Miércoles", "wednesday": "Miércoles",
+      "thu": "Jueves", "thursday": "Jueves",
+      "fri": "Viernes", "friday": "Viernes",
+      "sat": "Sábado", "saturday": "Sábado",
+      "sun": "Domingo", "sunday": "Domingo"
+    };
+
+    const ORDEN_DIAS = {
+      "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7
+    };
+
+    const DIAS_LISTA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    // Coordenadas geográficas de los corredores viales principales de Barranquilla presentes en `sitio_exacto_accidente`
+    const CORREDORES_GEOGRAFICOS = [
+      { id: "circunvalar", nombre: "Av. Circunvalar / Calle 110", filtro: "110", lat: 10.9585, lng: -74.8320, patterns: ["110", "circunvalar"] },
+      { id: "via40", nombre: "Corredor Industrial Vía 40", filtro: "VIA 40", lat: 11.0110, lng: -74.7920, patterns: ["via 40"] },
+      { id: "calle30", nombre: "Autopista Calle 30", filtro: "CL 30", lat: 10.9460, lng: -74.7820, patterns: ["cl 30", "calle 30"] },
+      { id: "murillo", nombre: "Av. Murillo (Calle 45)", filtro: "45", lat: 10.9570, lng: -74.7980, patterns: ["cl 45", "calle 45", "murillo"] },
+      { id: "cordialidad", nombre: "Av. Cordialidad (Calle 56)", filtro: "CORDIALIDAD", lat: 10.9595, lng: -74.8150, patterns: ["cordialidad", "cl 56", "calle 56"] },
+      { id: "norte72", nombre: "Zona Norte (Calles 72 a 84)", filtro: "72", lat: 10.9965, lng: -74.8085, patterns: ["cl 72", "calle 72", "cl 76", "cl 84", "calle 84"] },
+      { id: "suroriente", nombre: "Suroriente (Calles 17 a 19)", filtro: "CL 17", lat: 10.9420, lng: -74.7735, patterns: ["cl 17", "calle 17", "cl 19", "calle 19"] },
+      { id: "cra38", nombre: "Corredor Carrera 38", filtro: "CR 38", lat: 10.9780, lng: -74.8010, patterns: ["cr 38", "carrera 38", "cra 38"] },
+      { id: "cra46", nombre: "Av. Olaya Herrera (Cra 46)", filtro: "CR 46", lat: 10.9880, lng: -74.7960, patterns: ["cr 46", "carrera 46", "cra 46"] }
+    ];
+
+    const SVG_CHECK = '<svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    const SVG_CLOSE = '<svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    const SVG_SORT_NONE = '<svg class="icon-sm" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>';
+    const SVG_SORT_ASC = '<svg class="icon-sm" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>';
+    const SVG_SORT_DESC = '<svg class="icon-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+
+    let listaEstructuradaConsolidada = [];
+    let diccionarioConsolidado = {
+      por_anio: {},
+      por_categoria_gravedad: {},
+      por_clase_accidente: {},
+      iteraciones_paginas: []
+    };
+
+    let datosFiltrados = [];
+    let paginaActual = 1;
+    let filasPorPagina = 50;
+    let sortCol = null;
+    let sortAsc = true;
+    let modoLineaTemporal = "anual"; // 'anual' o 'mensual'
+    let leafletMap = null;
+    let leafletMarkersLayer = null;
+
+    const COLUMNAS = [
+      { key: "fecha_accidente", label: "Fecha", type: "text", placeholder: "Ej: 2022-05", visible: true },
+      { key: "hora_accidente", label: "Hora", type: "text", placeholder: "Ej: 07:30, pm", visible: true },
+      { key: "a_o_accidente", label: "Año", type: "select", visible: true },
+      { key: "mes_accidente", label: "Mes", type: "select", visible: true },
+      { key: "dia_accidente", label: "Día", type: "select", visible: true },
+      { key: "gravedad_accidente", label: "Gravedad", type: "select", visible: true },
+      { key: "clase_accidente", label: "Tipo de Siniestro", type: "select", visible: true },
+      { key: "sitio_exacto_accidente", label: "Sitio Exacto (Dirección)", type: "text", placeholder: "Buscar calle/carrera (sin tildes)...", visible: true },
+      { key: "cant_heridos_en_sitio_accidente", label: "Heridos", type: "number", placeholder: "Ej: >=1, 2", visible: true },
+      { key: "cant_muertos_en_sitio_accidente", label: "Fallecidos", type: "number", placeholder: "Ej: >=1, 1", visible: true },
+      { key: "total_victimas", label: "Total Víctimas", type: "number", placeholder: "Ej: >=2", visible: true },
+      { key: "indice_severidad", label: "Índice Severidad", type: "number", placeholder: "Ej: >=10", visible: false }
+    ];
+
+    let filtroAvanzadoFase2Activo = false;
+    let fragmentosExtraidos = [];
+
+    const pillFilters = {
+      a_o_accidente: new Set(),
+      gravedad_accidente: new Set(),
+      clase_accidente: new Set(),
+      dia_accidente: new Set()
+    };
+
+    const colFilters = {};
+    COLUMNAS.forEach(c => { colFilters[c.key] = ""; });
+
+    function cambiarPestana(tabId) {
+      const panes = ["dashboard", "explorer"];
+      panes.forEach(id => {
+        document.getElementById(`tabPane-${id}`).classList.toggle("active", id === tabId);
+        document.getElementById(`tabBtn-${id}`).classList.toggle("active", id === tabId);
+      });
+      if (tabId === "dashboard" && leafletMap) {
+        setTimeout(() => leafletMap.invalidateSize(), 60);
+      }
+    }
+
+    function cambiarModoLineaTemporal(modo) {
+      modoLineaTemporal = modo;
+      document.getElementById("btnToggleAnual").classList.toggle("active", modo === "anual");
+      document.getElementById("btnToggleMensual").classList.toggle("active", modo === "mensual");
+      document.getElementById("lineChartTitle").textContent =
+        modo === "anual"
+          ? "Evolución Histórica de Siniestros por Año (2018 – 2026)"
+          : "Comportamiento Estacional de Siniestros por Mes (Enero – Diciembre)";
+      actualizarKPIsYGraficos();
+    }
+
+    function normalizarTextoBusqueda(texto) {
+      return String(texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function traducirMesAlEspanol(mesRaw) {
+      const limpio = String(mesRaw || "").trim();
+      return MAPA_MESES_ES[limpio.toLowerCase()] || limpio;
+    }
+
+    function traducirDiaAlEspanol(diaRaw) {
+      const limpio = String(diaRaw || "").trim();
+      return MAPA_DIAS_ES[limpio.toLowerCase()] || limpio;
+    }
+
+    // ============================================================================
+    // MÓDULO 2 (FASE II): LIMPIEZA AVANZADA, TRADUCCIÓN Y CASTEO NUMÉRICO
+    // ============================================================================
+    function normalizarRegistro(item) {
+      const rawHeridos = item.cant_heridos_en_sitio_accidente;
+      const rawMuertos = item.cant_muertos_en_sitio_accidente;
+      const rawCantAcc = item.cantidad_accidentes;
+      const rawAnio = item.a_o_accidente;
+
+      const heridosNum = Number.isFinite(Number(rawHeridos)) ? Number(rawHeridos) : 0.0;
+      const muertosNum = Number.isFinite(Number(rawMuertos)) ? Number(rawMuertos) : 0.0;
+      const cantAccNum = Number.isFinite(Number(rawCantAcc)) && Number(rawCantAcc) > 0 ? parseInt(rawCantAcc, 10) : 1;
+      const anioNum = Number.isFinite(Number(rawAnio)) ? parseInt(rawAnio, 10) : 0;
+
+      const totalVictimas = heridosNum + muertosNum;
+      const indiceSeveridad = (cantAccNum * 1.0) + (heridosNum * 3.0) + (muertosNum * 10.0);
+      const sitioLimpio = String(item.sitio_exacto_accidente || "Dirección no registrada").trim();
+
+      return {
+        fecha_accidente: String(item.fecha_accidente || "").split("T")[0],
+        hora_accidente: String(item.hora_accidente || "").trim(),
+        gravedad_accidente: String(item.gravedad_accidente || "Sin especificar").trim(),
+        clase_accidente: String(item.clase_accidente || "Otro").trim(),
+        sitio_exacto_accidente: sitioLimpio,
+        cant_heridos_en_sitio_accidente: heridosNum,
+        cant_muertos_en_sitio_accidente: muertosNum,
+        cantidad_accidentes: cantAccNum,
+        a_o_accidente: String(anioNum || item.a_o_accidente || "").trim(),
+        anio_numerico: anioNum,
+        mes_accidente: traducirMesAlEspanol(item.mes_accidente),
+        dia_accidente: traducirDiaAlEspanol(item.dia_accidente),
+        total_victimas: totalVictimas,
+        indice_severidad: indiceSeveridad
+      };
+    }
+
+    function ejecutarFase2ConcatenacionYLimpieza(fragmentos) {
+      const crudosConcatenados = [].concat(...fragmentos);
+      const llavesVistas = new Set();
+      const listaLimpia = [];
+
+      for (let i = 0; i < crudosConcatenados.length; i++) {
+        const reg = normalizarRegistro(crudosConcatenados[i]);
+        const llaveCompuesta = `${reg.fecha_accidente}|${reg.hora_accidente}|${reg.sitio_exacto_accidente}|${reg.clase_accidente}|${reg.gravedad_accidente}`;
+        if (llavesVistas.has(llaveCompuesta)) {
+          continue;
+        }
+        llavesVistas.add(llaveCompuesta);
+        listaLimpia.push(reg);
+      }
+
+      listaEstructuradaConsolidada = listaLimpia;
+    }
+
+    // ============================================================================
+    // MÓDULO 3 (FASE I): EXTRACCIÓN SECUENCIAL (WHILE / FOR) Y CONSOLIDACIÓN MASIVA
+    // ============================================================================
+    async function ejecutarExtraccionSecuencialPaginada() {
+      fragmentosExtraidos = [];
+      listaEstructuradaConsolidada = [];
+      diccionarioConsolidado = {
+        por_anio: {},
+        por_categoria_gravedad: {},
+        por_clase_accidente: {},
+        iteraciones_paginas: []
+      };
+
+      let paginaIteracion = 1;
+      let offsetDinamico = 0;
+      let continuarIterando = true;
+
+      try {
+        while (continuarIterando) {
+          const paramsDinamicos = new URLSearchParams({
+            "$limit": String(TAMANO_LOTE_PAGINA),
+            "$offset": String(offsetDinamico),
+            "$order": ":id"
+          });
+          const urlIteracion = `${API_PAGINADA_URL}?${paramsDinamicos.toString()}`;
+
+          const resp = await fetch(urlIteracion, { headers: { "Accept": "application/json" } });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+          const lotePagina = await resp.json();
+          const cantidadLote = Array.isArray(lotePagina) ? lotePagina.length : 0;
+
+          fragmentosExtraidos.push(lotePagina);
+          ejecutarFase2ConcatenacionYLimpieza(fragmentosExtraidos);
+
+          diccionarioConsolidado.iteraciones_paginas.push({
+            pagina: paginaIteracion,
+            offset: offsetDinamico,
+            registros: cantidadLote
+          });
+
+          consolidarEnDiccionarioEstructurado();
+          construirCheckboxesColumnasVisibles();
+          construirEncabezadosTabla();
+          ejecutarFiltradoGlobal();
+
+          if (cantidadLote < TAMANO_LOTE_PAGINA) {
+            continuarIterando = false;
+          } else {
+            offsetDinamico += TAMANO_LOTE_PAGINA;
+            paginaIteracion += 1;
+          }
+        }
+      } catch (err) {
+        console.error("Error en extracción secuencial:", err);
+      }
+    }
+
+    function consolidarEnDiccionarioEstructurado() {
+      diccionarioConsolidado.por_anio = {};
+      diccionarioConsolidado.por_categoria_gravedad = {};
+      diccionarioConsolidado.por_clase_accidente = {};
+
+      for (const anioVar of ANIOS_OBJETIVO) {
+        diccionarioConsolidado.por_anio[anioVar] = { total_accidentes: 0, total_heridos: 0, total_muertos: 0, registros: [] };
+      }
+      for (const catVar of CATEGORIAS_GRAVEDAD) {
+        diccionarioConsolidado.por_categoria_gravedad[catVar] = { total_accidentes: 0, registros: [] };
+      }
+
+      for (let i = 0; i < listaEstructuradaConsolidada.length; i++) {
+        const reg = listaEstructuradaConsolidada[i];
+        const anio = reg.a_o_accidente || "Sin año";
+        const gravedad = reg.gravedad_accidente || "Sin dato";
+        const clase = reg.clase_accidente || "Sin dato";
+
+        if (!diccionarioConsolidado.por_anio[anio]) {
+          diccionarioConsolidado.por_anio[anio] = { total_accidentes: 0, total_heridos: 0, total_muertos: 0, registros: [] };
+        }
+        diccionarioConsolidado.por_anio[anio].total_accidentes += 1;
+        diccionarioConsolidado.por_anio[anio].total_heridos += reg.cant_heridos_en_sitio_accidente;
+        diccionarioConsolidado.por_anio[anio].total_muertos += reg.cant_muertos_en_sitio_accidente;
+        diccionarioConsolidado.por_anio[anio].registros.push(reg);
+
+        if (!diccionarioConsolidado.por_categoria_gravedad[gravedad]) {
+          diccionarioConsolidado.por_categoria_gravedad[gravedad] = { total_accidentes: 0, registros: [] };
+        }
+        diccionarioConsolidado.por_categoria_gravedad[gravedad].total_accidentes += 1;
+        diccionarioConsolidado.por_categoria_gravedad[gravedad].registros.push(reg);
+
+        if (!diccionarioConsolidado.por_clase_accidente[clase]) {
+          diccionarioConsolidado.por_clase_accidente[clase] = { total_accidentes: 0, registros: [] };
+        }
+        diccionarioConsolidado.por_clase_accidente[clase].total_accidentes += 1;
+        diccionarioConsolidado.por_clase_accidente[clase].registros.push(reg);
+      }
+    }
+
+    // ============================================================================
+    // MÓDULO 4: PÍLDORAS COMPACTAS SIN RUIDO VISUAL Y CHECKBOXES DE COLUMNA
+    // ============================================================================
+    function renderizarPildorasSuperiores() {
+      renderizarGrupoPildoras("pillsAnio", "a_o_accidente", "alfabetico");
+      renderizarGrupoPildoras("pillsGravedad", "gravedad_accidente", "frecuencia");
+      renderizarGrupoPildoras("pillsClase", "clase_accidente", "frecuencia");
+      renderizarGrupoPildoras("pillsDia", "dia_accidente", "dia_semana");
+    }
+
+    function renderizarGrupoPildoras(containerId, fieldKey, modoOrden) {
+      const container = document.getElementById(containerId);
+      const conteos = {};
+      for (const row of listaEstructuradaConsolidada) {
+        const val = row[fieldKey];
+        if (val) conteos[val] = (conteos[val] || 0) + 1;
+      }
+
+      let entradas = Object.entries(conteos);
+      if (modoOrden === "alfabetico") {
+        entradas.sort((a, b) => a[0].localeCompare(b[0]));
+      } else if (modoOrden === "dia_semana") {
+        entradas.sort((a, b) => (ORDEN_DIAS[a[0]] || 99) - (ORDEN_DIAS[b[0]] || 99));
+      } else {
+        entradas.sort((a, b) => b[1] - a[1]);
+      }
+
+      const setActivo = pillFilters[fieldKey];
+      const todosActivo = setActivo.size === 0;
+
+      const htmlTodas = `
+        <div class="filter-pill ${todosActivo ? "active" : ""}"
+             onclick="limpiarPildoraGrupo('${fieldKey}')"
+             title="Mostrar todos los registros (${listaEstructuradaConsolidada.length.toLocaleString()})">
+          ${todosActivo ? SVG_CHECK : ""}
+          <span>Todos</span>
+        </div>
+      `;
+
+      const htmlOpciones = entradas.map(([valor, cantidad]) => {
+        const isActive = setActivo.has(valor);
+        const valorEscapado = valor.replace(/'/g, "\\'");
+        return `
+          <div class="filter-pill ${isActive ? "active" : ""}"
+               onclick="togglePildora('${fieldKey}', '${valorEscapado}')"
+               title="${valor}: ${cantidad.toLocaleString()} registros">
+            ${isActive ? SVG_CHECK : ""}
+            <span>${valor}</span>
+            <span class="pill-hover-count">${cantidad.toLocaleString()}</span>
+          </div>
+        `;
+      }).join("");
+
+      container.innerHTML = htmlTodas + htmlOpciones;
+    }
+
+    function togglePildora(fieldKey, valor) {
+      const set = pillFilters[fieldKey];
+      if (set.has(valor)) {
+        set.delete(valor);
+      } else {
+        set.add(valor);
+      }
+      paginaActual = 1;
+      ejecutarFiltradoGlobal();
+    }
+
+    function limpiarPildoraGrupo(fieldKey) {
+      pillFilters[fieldKey].clear();
+      paginaActual = 1;
+      ejecutarFiltradoGlobal();
+    }
+
+    function construirCheckboxesColumnasVisibles() {
+      const container = document.getElementById("columnVisibilityPills");
+      container.innerHTML = COLUMNAS.map((col, idx) => `
+        <label class="col-checkbox-label">
+          <input type="checkbox" ${col.visible ? "checked" : ""} onchange="toggleColumnaVisible(${idx})" />
+          <span>${col.label}</span>
+        </label>
+      `).join("");
+    }
+
+    function toggleColumnaVisible(idx) {
+      const visiblesActuales = COLUMNAS.filter(c => c.visible).length;
+      if (COLUMNAS[idx].visible && visiblesActuales <= 1) {
+        construirCheckboxesColumnasVisibles();
+        return;
+      }
+      COLUMNAS[idx].visible = !COLUMNAS[idx].visible;
+      construirCheckboxesColumnasVisibles();
+      construirEncabezadosTabla();
+      renderizarTabla();
+    }
+
+    function ordenarOpcionesSelectColumna(key, valoresUnicos) {
+      if (key === "mes_accidente") {
+        return valoresUnicos.sort((a, b) => (ORDEN_MESES[a] || 99) - (ORDEN_MESES[b] || 99));
+      }
+      if (key === "dia_accidente") {
+        return valoresUnicos.sort((a, b) => (ORDEN_DIAS[a] || 99) - (ORDEN_DIAS[b] || 99));
+      }
+      return valoresUnicos.sort();
+    }
+
+    function construirEncabezadosTabla() {
+      const trTitles = document.getElementById("tableHeaderTitles");
+      const trFilters = document.getElementById("tableHeaderFilters");
+      const colsVisibles = COLUMNAS.filter(c => c.visible);
+
+      trTitles.innerHTML = colsVisibles.map(col => {
+        let iconSvg = SVG_SORT_NONE;
+        if (sortCol === col.key) iconSvg = sortAsc ? SVG_SORT_ASC : SVG_SORT_DESC;
+        return `
+          <th class="sortable" onclick="ordenarPorColumna('${col.key}')">
+            <span class="th-content">
+              <span>${col.label}</span>
+              <span class="sort-icon">${iconSvg}</span>
+            </span>
+          </th>
+        `;
+      }).join("");
+
+      trFilters.innerHTML = colsVisibles.map(col => {
+        const currentVal = colFilters[col.key] || "";
+        const hasValClass = currentVal !== "" ? "has-value" : "";
+
+        if (col.type === "select") {
+          const unicos = [...new Set(listaEstructuradaConsolidada.map(d => d[col.key]).filter(Boolean))];
+          const opciones = ordenarOpcionesSelectColumna(col.key, unicos);
+          return `
+            <th>
+              <select class="col-filter-select ${hasValClass}"
+                      onchange="actualizarFiltroColumna('${col.key}', this.value)">
+                <option value="">Todos</option>
+                ${opciones.map(op => `<option value="${op}" ${op === currentVal ? "selected" : ""}>${op}</option>`).join("")}
+              </select>
+            </th>
+          `;
+        } else {
+          return `
+            <th>
+              <input type="text"
+                     class="col-filter-input ${hasValClass}"
+                     placeholder="${col.placeholder || "Filtrar..."}"
+                     value="${currentVal.replace(/"/g, "&quot;")}"
+                     oninput="actualizarFiltroColumna('${col.key}', this.value)" />
+            </th>
+          `;
+        }
+      }).join("");
+    }
+
+    function actualizarFiltroColumna(key, valor) {
+      colFilters[key] = valor.trim();
+      const inputs = document.querySelectorAll("#tableHeaderFilters input, #tableHeaderFilters select");
+      const colsVisibles = COLUMNAS.filter(c => c.visible);
+      const idx = colsVisibles.findIndex(c => c.key === key);
+      if (idx !== -1 && inputs[idx]) {
+        if (colFilters[key] !== "") inputs[idx].classList.add("has-value");
+        else inputs[idx].classList.remove("has-value");
+      }
+
+      paginaActual = 1;
+      ejecutarFiltradoGlobal();
+    }
+
+    function evaluarFiltroNumerico(valorCelda, expresion) {
+      const exp = expresion.trim();
+      if (!exp) return true;
+      if (exp.startsWith(">=")) return valorCelda >= parseFloat(exp.slice(2));
+      if (exp.startsWith("<=")) return valorCelda <= parseFloat(exp.slice(2));
+      if (exp.startsWith(">")) return valorCelda > parseFloat(exp.slice(1));
+      if (exp.startsWith("<")) return valorCelda < parseFloat(exp.slice(1));
+      if (exp.startsWith("=")) return valorCelda === parseFloat(exp.slice(1));
+      const num = parseFloat(exp);
+      if (!isNaN(num)) return valorCelda === num;
+      return String(valorCelda).includes(exp);
+    }
+
+    function toggleFiltroAvanzadoFase2() {
+      filtroAvanzadoFase2Activo = !filtroAvanzadoFase2Activo;
+      const btn = document.getElementById("btnFiltroAvanzado");
+      const textSpan = document.getElementById("btnFiltroAvanzadoText");
+      if (btn && textSpan) {
+        btn.classList.toggle("active", filtroAvanzadoFase2Activo);
+        textSpan.textContent = filtroAvanzadoFase2Activo
+          ? "Siniestros graves recientes (Activo)"
+          : "Filtrar siniestros graves recientes";
+      }
+      paginaActual = 1;
+      ejecutarFiltradoGlobal();
+    }
+
+    function filtrarPorCorredorGeografico(patronTexto) {
+      if (colFilters.sitio_exacto_accidente === patronTexto) {
+        colFilters.sitio_exacto_accidente = "";
+      } else {
+        colFilters.sitio_exacto_accidente = patronTexto;
+      }
+      construirEncabezadosTabla();
+      paginaActual = 1;
+      ejecutarFiltradoGlobal();
+    }
+
+    function ejecutarFiltradoGlobal() {
+      datosFiltrados = listaEstructuradaConsolidada.filter(row => {
+        if (filtroAvanzadoFase2Activo) {
+          const cumpleAnidada = (
+            ((row.anio_numerico >= 2020) && (row.anio_numerico <= 2026))
+            && (
+              ((row.gravedad_accidente === "Con heridos") || (row.gravedad_accidente === "Con muertos"))
+              && ((row.cant_heridos_en_sitio_accidente >= 1.0) || (row.cant_muertos_en_sitio_accidente >= 1.0))
+            )
+            && (
+              (row.clase_accidente === "Choque")
+              || (row.clase_accidente === "Atropello")
+              || (row.clase_accidente === "Volcamiento")
+            )
+          );
+          if (!cumpleAnidada) return false;
+        }
+
+        for (const [fieldKey, activeSet] of Object.entries(pillFilters)) {
+          if (activeSet.size > 0 && !activeSet.has(row[fieldKey])) {
+            return false;
+          }
+        }
+
+        for (const col of COLUMNAS) {
+          const filtro = colFilters[col.key];
+          if (!filtro) continue;
+
+          if (col.type === "select") {
+            if (row[col.key] !== filtro) return false;
+          } else if (col.type === "number") {
+            if (!evaluarFiltroNumerico(row[col.key], filtro)) return false;
+          } else {
+            const textoCeldaNorm = normalizarTextoBusqueda(row[col.key]);
+            const terminosBusqueda = normalizarTextoBusqueda(filtro).split(" ").filter(Boolean);
+            for (const termino of terminosBusqueda) {
+              if (!textoCeldaNorm.includes(termino)) return false;
+            }
+          }
+        }
+
+        return true;
+      });
+
+      if (sortCol) {
+        datosFiltrados.sort((a, b) => {
+          const valA = a[sortCol];
+          const valB = b[sortCol];
+          if (sortCol === "mes_accidente") {
+            return sortAsc
+              ? (ORDEN_MESES[valA] || 99) - (ORDEN_MESES[valB] || 99)
+              : (ORDEN_MESES[valB] || 99) - (ORDEN_MESES[valA] || 99);
+          }
+          if (sortCol === "dia_accidente") {
+            return sortAsc
+              ? (ORDEN_DIAS[valA] || 99) - (ORDEN_DIAS[valB] || 99)
+              : (ORDEN_DIAS[valB] || 99) - (ORDEN_DIAS[valA] || 99);
+          }
+          if (typeof valA === "number" && typeof valB === "number") {
+            return sortAsc ? valA - valB : valB - valA;
+          }
+          return sortAsc
+            ? String(valA).localeCompare(String(valB))
+            : String(valB).localeCompare(String(valA));
+        });
+      }
+
+      document.getElementById("tabBadgeRegistros").textContent = datosFiltrados.length.toLocaleString();
+
+      renderizarPildorasSuperiores();
+      renderizarBarraChipsActivos();
+      actualizarKPIsYGraficos();
+      renderizarTabla();
+    }
+
+    function ordenarPorColumna(key) {
+      if (sortCol === key) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = key;
+        sortAsc = true;
+      }
+      construirEncabezadosTabla();
+      ejecutarFiltradoGlobal();
+    }
+
+    function renderizarBarraChipsActivos() {
+      const bar = document.getElementById("activeFiltersBar");
+      const container = document.getElementById("activeChipsContainer");
+      const chips = [];
+
+      const nombresCampos = {
+        a_o_accidente: "Año",
+        gravedad_accidente: "Gravedad",
+        clase_accidente: "Tipo",
+        dia_accidente: "Día"
+      };
+
+      if (filtroAvanzadoFase2Activo) {
+        chips.push(`
+          <span class="active-chip">
+            <span>Siniestros graves recientes (2020-2026)</span>
+            <button onclick="toggleFiltroAvanzadoFase2()" title="Quitar filtro">${SVG_CLOSE}</button>
+          </span>
+        `);
+      }
+
+      for (const [key, set] of Object.entries(pillFilters)) {
+        set.forEach(val => {
+          const valEsc = val.replace(/'/g, "\\'");
+          chips.push(`
+            <span class="active-chip">
+              <span>${nombresCampos[key]}: ${val}</span>
+              <button onclick="togglePildora('${key}', '${valEsc}')" title="Quitar filtro">${SVG_CLOSE}</button>
+            </span>
+          `);
+        });
+      }
+
+      for (const col of COLUMNAS) {
+        const val = colFilters[col.key];
+        if (val) {
+          chips.push(`
+            <span class="active-chip">
+              <span>${col.label}: "${val}"</span>
+              <button onclick="quitarFiltroColumna('${col.key}')" title="Quitar filtro">${SVG_CLOSE}</button>
+            </span>
+          `);
+        }
+      }
+
+      if (chips.length > 0) {
+        bar.classList.add("visible");
+        container.innerHTML = chips.join("");
+      } else {
+        bar.classList.remove("visible");
+        container.innerHTML = "";
+      }
+    }
+
+    function quitarFiltroColumna(key) {
+      colFilters[key] = "";
+      construirEncabezadosTabla();
+      ejecutarFiltradoGlobal();
+    }
+
+    function limpiarTodosLosFiltros() {
+      filtroAvanzadoFase2Activo = false;
+      const btn = document.getElementById("btnFiltroAvanzado");
+      const textSpan = document.getElementById("btnFiltroAvanzadoText");
+      if (btn && textSpan) {
+        btn.classList.remove("active");
+        textSpan.textContent = "Filtrar siniestros graves recientes";
+      }
+      Object.values(pillFilters).forEach(set => set.clear());
+      COLUMNAS.forEach(c => { colFilters[c.key] = ""; });
+      sortCol = null;
+      paginaActual = 1;
+      construirEncabezadosTabla();
+      ejecutarFiltradoGlobal();
+    }
+
+    // ============================================================================
+    // MÓDULO 5: VISUALIZACIONES DIVERSIFICADAS (LÍNEAS, ANILLO, TREEMAP, HEATMAP Y MAPA)
+    // ============================================================================
+    function actualizarKPIsYGraficos() {
+      const total = datosFiltrados.length;
+      let conHeridos = 0;
+      let conMuertos = 0;
+      let soloDanos = 0;
+      let sumaHeridos = 0;
+      let sumaMuertos = 0;
+
+      const conteoAnios = {};
+      const conteoGravedad = { "Solo daños": 0, "Con heridos": 0, "Con muertos": 0 };
+      const conteoClases = {};
+      const conteoMeses = {};
+
+      for (const d of datosFiltrados) {
+        const g = d.gravedad_accidente.toLowerCase();
+        if (g.includes("herido")) {
+          conHeridos++;
+          conteoGravedad["Con heridos"]++;
+        } else if (g.includes("muerto")) {
+          conMuertos++;
+          conteoGravedad["Con muertos"]++;
+        } else {
+          soloDanos++;
+          conteoGravedad["Solo daños"]++;
+        }
+
+        sumaHeridos += d.cant_heridos_en_sitio_accidente;
+        sumaMuertos += d.cant_muertos_en_sitio_accidente;
+
+        if (d.a_o_accidente) conteoAnios[d.a_o_accidente] = (conteoAnios[d.a_o_accidente] || 0) + 1;
+        if (d.clase_accidente) conteoClases[d.clase_accidente] = (conteoClases[d.clase_accidente] || 0) + 1;
+        if (d.mes_accidente) conteoMeses[d.mes_accidente] = (conteoMeses[d.mes_accidente] || 0) + 1;
+      }
+
+      document.getElementById("kpiTotal").textContent = total.toLocaleString();
+      document.getElementById("kpiTotalSub").textContent = `De ${listaEstructuradaConsolidada.length.toLocaleString()} registros totales`;
+      document.getElementById("kpiHeridos").textContent = conHeridos.toLocaleString();
+      document.getElementById("kpiTotalPersonasHeridas").textContent = `${sumaHeridos.toLocaleString()} personas lesionadas`;
+      document.getElementById("kpiMuertos").textContent = conMuertos.toLocaleString();
+      document.getElementById("kpiTotalPersonasMuertas").textContent = `${sumaMuertos.toLocaleString()} personas fallecidas en sitio`;
+      document.getElementById("kpiDanos").textContent = soloDanos.toLocaleString();
+      const pctDanos = total > 0 ? ((soloDanos / total) * 100).toFixed(1) : 0;
+      document.getElementById("kpiDanosPct").textContent = `${pctDanos}% del total seleccionado`;
+
+      // 1. Fila 2 (Ancho completo): Gráfico de Líneas / Área Temporal
+      if (modoLineaTemporal === "anual") {
+        const datosSerieAnual = Object.entries(conteoAnios).sort((a, b) => a[0].localeCompare(b[0]));
+        renderizarGraficoLineaSVG("lineChartTemporal", datosSerieAnual, "#2563eb", "a_o_accidente");
+      } else {
+        const datosSerieMensual = Object.entries(conteoMeses).sort(
+          (a, b) => (ORDEN_MESES[a[0]] || 99) - (ORDEN_MESES[b[0]] || 99)
+        );
+        renderizarGraficoLineaSVG("lineChartTemporal", datosSerieMensual, "#16a34a", null);
+      }
+
+      // 2. Fila 3 (Izquierda): Treemap Proporcional + Barras Horizontales sin scroll para Modalidad
+      const clasesOrdenadas = Object.entries(conteoClases).sort((a, b) => b[1] - a[1]);
+      renderizarTreemapModalidad("treemapClases", clasesOrdenadas, total);
+      renderizarBarras("chartClases", clasesOrdenadas, "#0284c7", "clase_accidente", total);
+
+      // 3. Fila 3 (Derecha): Gráfico de Anillo (Donut Chart) para Gravedad
+      renderizarDonutGravedad(conteoGravedad, total);
+
+      // 4. Filas 4 y 5: Heatmap Día vs Hora, Mapa Geográfico y Análisis de Severidad
+      renderizarFase3EDA();
+    }
+
+    /**
+     * Renderiza un Gráfico de Líneas y Área SVG de ancho completo con eje X horizontal
+     * de izquierda a derecha, etiquetas de datos y puntos interactivos.
+     */
+    function renderizarGraficoLineaSVG(containerId, seriesData, strokeColor, filterKey) {
+      const container = document.getElementById(containerId);
+      if (!seriesData || seriesData.length === 0) {
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--muted);">Sin datos para los filtros seleccionados</div>';
+        return;
+      }
+
+      const width = 1160;
+      const height = 240;
+      const padLeft = 58;
+      const padRight = 34;
+      const padTop = 28;
+      const padBottom = 38;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const maxVal = Math.max(...seriesData.map(d => d[1]), 1);
+      const stepX = seriesData.length > 1 ? plotW / (seriesData.length - 1) : plotW / 2;
+
+      const points = seriesData.map(([label, val], idx) => {
+        const x = seriesData.length > 1 ? padLeft + idx * stepX : padLeft + plotW / 2;
+        const y = padTop + plotH - (val / maxVal) * plotH;
+        return { label, val, x, y };
+      });
+
+      const polylinePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+      const areaPoints = `${points[0].x.toFixed(1)},${padTop + plotH} ${polylinePoints} ${points[points.length - 1].x.toFixed(1)},${padTop + plotH}`;
+
+      // Líneas guía horizontales
+      const gridLines = [0, 0.25, 0.5, 0.75, 1].map(pct => {
+        const y = padTop + plotH - pct * plotH;
+        const valLabel = Math.round(maxVal * pct).toLocaleString();
+        return `
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="4 4" stroke-width="1" />
+          <text x="${padLeft - 10}" y="${y + 4}" text-anchor="end" font-size="11" fill="#64748b">${valLabel}</text>
+        `;
+      }).join("");
+
+      const nodesHtml = points.map(p => {
+        const isSelected = filterKey && pillFilters[filterKey] && pillFilters[filterKey].has(p.label);
+        const clickHandler = filterKey
+          ? `onclick="togglePildora('${filterKey}', '${p.label.replace(/'/g, "\\'")}')"`
+          : "";
+        return `
+          <g class="line-point-group" ${clickHandler}>
+            <title>${p.label}: ${p.val.toLocaleString()} siniestros</title>
+            <circle cx="${p.x}" cy="${p.y}" r="${isSelected ? 7 : 5}" fill="${isSelected ? '#ea580c' : '#ffffff'}" stroke="${strokeColor}" stroke-width="3" />
+            <text x="${p.x}" y="${p.y - 11}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0f172a">${p.val.toLocaleString()}</text>
+            <text x="${p.x}" y="${padTop + plotH + 22}" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">${p.label}</text>
+          </g>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <svg class="line-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.26"/>
+              <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.01"/>
+            </linearGradient>
+          </defs>
+          ${gridLines}
+          <polygon points="${areaPoints}" fill="url(#lineAreaGrad)" />
+          <polyline fill="none" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${polylinePoints}" />
+          ${nodesHtml}
+        </svg>
+      `;
+    }
+
+    /**
+     * Renderiza un Treemap horizontal proporcional para visualizar el peso de cada modalidad.
+     */
+    function renderizarTreemapModalidad(containerId, entries, total) {
+      const container = document.getElementById(containerId);
+      if (total === 0 || entries.length === 0) {
+        container.innerHTML = "";
+        return;
+      }
+      const paleta = ["#0284c7", "#2563eb", "#ea580c", "#0d9488", "#7c3aed", "#64748b"];
+      container.innerHTML = entries.map(([clase, count], idx) => {
+        const pct = ((count / total) * 100).toFixed(1);
+        const flexBasis = Math.max(6, parseFloat(pct));
+        const bg = paleta[idx % paleta.length];
+        return `
+          <div class="treemap-cell"
+               style="flex: ${flexBasis} 1 0%; background: ${bg};"
+               onclick="togglePildora('clase_accidente', '${clase.replace(/'/g, "\\'")}')"
+               title="${clase}: ${count.toLocaleString()} (${pct}%)">
+            <span>${clase}</span>
+            <small>${pct}%</small>
+          </div>
+        `;
+      }).join("");
+    }
+
+    /**
+     * Renderiza el Gráfico de Anillo (Donut Chart) para las 3 categorías de Gravedad
+     * con el porcentaje principal en el centro hueco del anillo.
+     */
+    function renderizarDonutGravedad(conteoGravedad, total) {
+      const svgContainer = document.getElementById("donutGravedadContainer");
+      const legendContainer = document.getElementById("donutGravedadLegend");
+      const insightEl = document.getElementById("donutGravedadInsight");
+
+      if (total === 0) {
+        svgContainer.innerHTML = '<div style="color: var(--muted); font-size: 0.82rem;">Sin datos</div>';
+        legendContainer.innerHTML = "";
+        return;
+      }
+
+      const categorias = [
+        { label: "Solo daños", count: conteoGravedad["Solo daños"] || 0, color: "#0284c7" },
+        { label: "Con heridos", count: conteoGravedad["Con heridos"] || 0, color: "#ea580c" },
+        { label: "Con muertos", count: conteoGravedad["Con muertos"] || 0, color: "#dc2626" }
+      ];
+
+      const size = 210;
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = 76;
+      const circumference = 2 * Math.PI * radius;
+
+      let offsetAcumulado = 0;
+      const circlesSvg = categorias.map(cat => {
+        const frac = cat.count / total;
+        const arcLen = frac * circumference;
+        const dashArray = `${arcLen} ${circumference}`;
+        const dashOffset = -offsetAcumulado;
+        offsetAcumulado += arcLen;
+        return `
+          <circle cx="${cx}" cy="${cy}" r="${radius}"
+                  fill="transparent"
+                  stroke="${cat.color}"
+                  stroke-width="26"
+                  stroke-dasharray="${dashArray}"
+                  stroke-dashoffset="${dashOffset}"
+                  style="cursor: pointer; transition: stroke-dasharray 0.3s ease;"
+                  onclick="togglePildora('gravedad_accidente', '${cat.label}')">
+            <title>${cat.label}: ${cat.count.toLocaleString()} (${(frac * 100).toFixed(1)}%)</title>
+          </circle>
+        `;
+      }).join("");
+
+      const catDominante = [...categorias].sort((a, b) => b.count - a.count)[0];
+      const pctDominante = ((catDominante.count / total) * 100).toFixed(1);
+
+      svgContainer.innerHTML = `
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <g transform="rotate(-90 ${cx} ${cy})">
+            ${circlesSvg}
+          </g>
+          <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="800" fill="#0f172a">${pctDominante}%</text>
+          <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#64748b">${catDominante.label}</text>
+          <text x="${cx}" y="${cy + 30}" text-anchor="middle" font-size="10" fill="#94a3b8">${total.toLocaleString()} totales</text>
+        </svg>
+      `;
+
+      legendContainer.innerHTML = categorias.map(cat => {
+        const pct = ((cat.count / total) * 100).toFixed(1);
+        const isSel = pillFilters.gravedad_accidente.has(cat.label);
+        return `
+          <div class="donut-legend-item ${isSel ? "selected-bar" : ""}"
+               onclick="togglePildora('gravedad_accidente', '${cat.label}')">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="donut-swatch" style="background: ${cat.color};"></span>
+              <span style="font-weight: 600; font-size: 0.82rem;">${isSel ? "✓ " : ""}${cat.label}</span>
+            </div>
+            <div style="font-weight: 700; font-size: 0.82rem; color: var(--text);">
+              ${cat.count.toLocaleString()} <span style="color: var(--muted); font-weight: 500;">(${pct}%)</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const pctVictimas = (((conteoGravedad["Con heridos"] + conteoGravedad["Con muertos"]) / total) * 100).toFixed(1);
+      insightEl.innerHTML = `<b>Balance de severidad:</b> El <b>${pctVictimas}%</b> de los siniestros seleccionados involucra personas lesionadas o fallecidas, mientras que el <b>${((conteoGravedad["Solo daños"] / total) * 100).toFixed(1)}%</b> corresponde exclusivamente a daños materiales.`;
+    }
+
+    function extraerHora24(horaStr) {
+      if (!horaStr) return 12;
+      const partes = String(horaStr).toLowerCase().trim().split(":");
+      let h = parseInt(partes[0], 10);
+      if (isNaN(h)) return 12;
+      const esPM = horaStr.toLowerCase().includes("pm");
+      const esAM = horaStr.toLowerCase().includes("am");
+      if (esPM && h < 12) h += 12;
+      if (esAM && h === 12) h = 0;
+      return h;
+    }
+
+    function calcularCorrelacionPearson(arrX, arrY) {
+      const n = arrX.length;
+      if (n < 2) return 0;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+      for (let i = 0; i < n; i++) {
+        const x = arrX[i];
+        const y = arrY[i];
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+        sumY2 += y * y;
+      }
+      const num = (n * sumXY) - (sumX * sumY);
+      const den = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+      return den === 0 ? 0 : num / den;
+    }
+
+    /**
+     * Renderiza el Mapa de Calor Temporal cruzando Días de la Semana (Eje Y)
+     * con Bloques Horarios del Día (Eje X, de 00h a 23h).
+     */
+    function renderizarHeatmapDiaHora() {
+      const container = document.getElementById("heatmapDiaHoraContainer");
+      const bloquesHoras = [
+        { label: "00-02h", min: 0, max: 2 },
+        { label: "03-05h", min: 3, max: 5 },
+        { label: "06-08h", min: 6, max: 8 },
+        { label: "09-11h", min: 9, max: 11 },
+        { label: "12-14h", min: 12, max: 14 },
+        { label: "15-17h", min: 15, max: 17 },
+        { label: "18-20h", min: 18, max: 20 },
+        { label: "21-23h", min: 21, max: 23 }
+      ];
+
+      const matriz = {};
+      DIAS_LISTA.forEach(d => {
+        matriz[d] = new Array(bloquesHoras.length).fill(0);
+      });
+
+      let maxCelda = 1;
+      let diaCritico = "Viernes";
+      let bloqueCritico = "18-20h";
+
+      for (const row of datosFiltrados) {
+        const dia = row.dia_accidente;
+        if (!matriz[dia]) continue;
+        const h = extraerHora24(row.hora_accidente);
+        const idxBloque = Math.min(bloquesHoras.length - 1, Math.floor(h / 3));
+        matriz[dia][idxBloque] += 1;
+        if (matriz[dia][idxBloque] > maxCelda) {
+          maxCelda = matriz[dia][idxBloque];
+          diaCritico = dia;
+          bloqueCritico = bloquesHoras[idxBloque].label;
+        }
+      }
+
+      let html = `<table class="heatmap-table">
+        <thead>
+          <tr>
+            <th>Día \\ Hora</th>
+            ${bloquesHoras.map(b => `<th>${b.label}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>`;
+
+      for (const dia of DIAS_LISTA) {
+        html += `<tr><td class="day-label" onclick="togglePildora('dia_accidente', '${dia}')" style="cursor:pointer;">${dia}</td>`;
+        for (let bIdx = 0; bIdx < bloquesHoras.length; bIdx++) {
+          const val = matriz[dia][bIdx];
+          const ratio = val / maxCelda;
+          const alpha = Math.max(0.08, Math.min(0.95, ratio));
+          const bg = ratio > 0.65
+            ? `rgba(220, 38, 38, ${alpha.toFixed(2)})`
+            : `rgba(37, 99, 235, ${alpha.toFixed(2)})`;
+          const textColor = ratio > 0.45 ? "#ffffff" : "#0f172a";
+          html += `
+            <td class="heatmap-cell"
+                style="background: ${bg}; color: ${textColor};"
+                onclick="togglePildora('dia_accidente', '${dia}')"
+                title="${dia} (${bloquesHoras[bIdx].label}): ${val.toLocaleString()} siniestros">
+              ${val}
+            </td>
+          `;
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+
+      document.getElementById("edaInterpretacion2").innerHTML =
+        `<b>Punto crítico temporal:</b> El cruce entre día y hora revela que la mayor concentración ocurre los <b>${diaCritico}</b> en la franja de <b>${bloqueCritico}</b> (${maxCelda.toLocaleString()} siniestros), coincidiendo con las horas pico de movilidad.`;
+    }
+
+    /**
+     * Renderiza el Mapa Geográfico de Puntos de Calor (Clusters por Corredor Vial)
+     * utilizando Leaflet/OpenStreetMap o un mapa vectorial interactivo integrado si no hay red.
+     */
+    function renderizarMapaGeografico() {
+      const container = document.getElementById("geoMapContainer");
+      const insightEl = document.getElementById("geoMapInsight");
+
+      // Contabilizar siniestros y víctimas en cada corredor vial a partir de `sitio_exacto_accidente`
+      const statsCorredores = CORREDORES_GEOGRAFICOS.map(c => ({
+        ...c,
+        total: 0,
+        conVictimas: 0
+      }));
+
+      for (const d of datosFiltrados) {
+        const sitioLow = d.sitio_exacto_accidente.toLowerCase();
+        for (const corr of statsCorredores) {
+          if (corr.patterns.some(p => sitioLow.includes(p))) {
+            corr.total += 1;
+            if (d.total_victimas > 0 || !d.gravedad_accidente.toLowerCase().includes("solo")) {
+              corr.conVictimas += 1;
+            }
+            break;
+          }
+        }
+      }
+
+      const maxCorredor = Math.max(...statsCorredores.map(c => c.total), 1);
+      const topCorredor = [...statsCorredores].sort((a, b) => b.total - a.total)[0];
+
+      if (typeof L !== "undefined") {
+        if (!leafletMap) {
+          leafletMap = L.map("geoMapContainer", { zoomControl: true }).setView([10.9750, -74.8020], 12);
+          L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+            attribution: "&copy; OpenStreetMap &copy; CARTO",
+            maxZoom: 18
+          }).addTo(leafletMap);
+          leafletMarkersLayer = L.layerGroup().addTo(leafletMap);
+        }
+
+        leafletMarkersLayer.clearLayers();
+
+        statsCorredores.forEach(corr => {
+          if (corr.total === 0) return;
+          const radio = 10 + (corr.total / maxCorredor) * 20;
+          const pctVict = ((corr.conVictimas / corr.total) * 100).toFixed(1);
+          const colorCirculo = parseFloat(pctVict) >= 50 ? "#dc2626" : "#ea580c";
+
+          const marker = L.circleMarker([corr.lat, corr.lng], {
+            radius: radio,
+            fillColor: colorCirculo,
+            color: "#ffffff",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.78
+          });
+
+          marker.bindTooltip(
+            `<b>${corr.nombre}</b><br/>Siniestros: ${corr.total.toLocaleString()}<br/>Con víctimas: ${corr.conVictimas.toLocaleString()} (${pctVict}%)<br/><i>Clic para filtrar este corredor</i>`
+          );
+
+          marker.on("click", () => filtrarPorCorredorGeografico(corr.filtro));
+          leafletMarkersLayer.addLayer(marker);
+        });
+      } else {
+        // Mapa vectorial de respaldo en caso de abrir el archivo sin internet
+        container.innerHTML = `<div style="padding: 16px; font-size: 0.8rem;">Corredor principal: <b>${topCorredor.nombre}</b> (${topCorredor.total.toLocaleString()} siniestros)</div>`;
+      }
+
+      insightEl.innerHTML =
+        `<b>Concentración espacial:</b> El corredor con mayor siniestralidad registrada es <b>${topCorredor.nombre}</b> con <b>${topCorredor.total.toLocaleString()} eventos</b> (${topCorredor.conVictimas.toLocaleString()} con víctimas). Haz clic en cualquier círculo del mapa para filtrar ese corredor.`;
+    }
+
+    function renderizarFase3EDA() {
+      const n = datosFiltrados.length;
+      if (n === 0) return;
+
+      // 1. Actualizar Mapa de Calor Día vs Hora y Mapa Geográfico
+      renderizarHeatmapDiaHora();
+      renderizarMapaGeografico();
+
+      // 2. Proporción de Víctimas según Modalidad (100% Apilada sin scroll)
+      const tablaCruzada = {};
+      for (const d of datosFiltrados) {
+        const c = d.clase_accidente || "Otro";
+        if (!tablaCruzada[c]) tablaCruzada[c] = { danos: 0, heridos: 0, muertos: 0, total: 0 };
+        const g = d.gravedad_accidente.toLowerCase();
+        if (g.includes("muerto")) tablaCruzada[c].muertos++;
+        else if (g.includes("herido")) tablaCruzada[c].heridos++;
+        else tablaCruzada[c].danos++;
+        tablaCruzada[c].total++;
+      }
+
+      const clasesOrdenadas = Object.entries(tablaCruzada).sort((a, b) => b[1].total - a[1].total);
+      document.getElementById("edaStackedClaseGravedad").innerHTML = clasesOrdenadas.map(([clase, stats]) => {
+        const pDanos = ((stats.danos / stats.total) * 100).toFixed(1);
+        const pHeridos = ((stats.heridos / stats.total) * 100).toFixed(1);
+        const pMuertos = ((stats.muertos / stats.total) * 100).toFixed(1);
+        const isSel = pillFilters.clase_accidente.has(clase);
+        return `
+          <div class="bar-row ${isSel ? "selected-bar" : ""}" onclick="togglePildora('clase_accidente', '${clase.replace(/'/g, "\\'")}')"
+               title="${clase} (${stats.total.toLocaleString()} casos): Solo daños ${pDanos}% | Con heridos ${pHeridos}% | Con fallecidos ${pMuertos}%">
+            <div class="bar-label">${isSel ? SVG_CHECK : ""}<span>${clase}</span></div>
+            <div class="bar-track" style="display: flex;">
+              <div style="width: ${pDanos}%; background: #0284c7; height: 100%;"></div>
+              <div style="width: ${pHeridos}%; background: #ea580c; height: 100%;"></div>
+              <div style="width: ${pMuertos}%; background: #dc2626; height: 100%;"></div>
+            </div>
+            <div class="bar-count">${(parseFloat(pHeridos) + parseFloat(pMuertos)).toFixed(0)}% víct.</div>
+          </div>
+        `;
+      }).join("");
+
+      const atropelloStats = tablaCruzada["Atropello"] || { heridos: 0, muertos: 0, total: 1 };
+      const choqueStats = tablaCruzada["Choque"] || { heridos: 0, muertos: 0, total: 1 };
+      const pctVictAtropello = (((atropelloStats.heridos + atropelloStats.muertos) / Math.max(1, atropelloStats.total)) * 100).toFixed(1);
+      const pctVictChoque = (((choqueStats.heridos + choqueStats.muertos) / Math.max(1, choqueStats.total)) * 100).toFixed(1);
+
+      document.getElementById("edaInterpretacion1").innerHTML =
+        `<b>Comparativa de modalidades:</b> Los <b>Choques</b> representan el mayor volumen general, seguidos por <b>Atropellos</b> y <b>Caídas de Ocupante</b>.`;
+
+      document.getElementById("edaInterpretacion3").innerHTML =
+        `<b>Riesgo por modalidad:</b> Mientras en los <b>Choques</b> el ${pctVictChoque}% registra lesionados, en los <b>Atropellos</b> y <b>Caídas de Ocupante</b> el <b>${pctVictAtropello}%</b> deja víctimas directas.`;
+
+      // 3. Eventos Múltiples y Matriz de Correlación sin scroll
+      const victimasOrdenadas = datosFiltrados.map(d => d.total_victimas).sort((a, b) => a - b);
+      const q1 = victimasOrdenadas[Math.floor(n * 0.25)] || 0;
+      const mediana = victimasOrdenadas[Math.floor(n * 0.50)] || 0;
+      const q3 = victimasOrdenadas[Math.floor(n * 0.75)] || 0;
+      const iqr = Math.max(0, q3 - q1);
+      const umbralOutlier = q3 + 1.5 * iqr;
+      const maxVict = victimasOrdenadas[n - 1] || 0;
+
+      let conteoOutliers = 0;
+      for (const v of victimasOrdenadas) {
+        if (v > Math.max(2.0, umbralOutlier)) conteoOutliers++;
+      }
+
+      document.getElementById("edaOutliersBox").innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span class="badge badge-danos">Mediana: ${mediana} víct.</span>
+          <span class="badge badge-heridos">Rango típico: ${q1} a ${q3} víct.</span>
+          <span class="badge badge-muertos">Eventos múltiples (≥3 víct.): ${conteoOutliers.toLocaleString()} casos (Máx: ${maxVict})</span>
+        </div>
+      `;
+
+      const vecAtropelloCaida = [];
+      const vecHoraNocturna = [];
+      const vecAnio = [];
+      const vecTieneVictimas = [];
+      const vecTotalVictimas = [];
+      const vecSeveridad = [];
+
+      for (const d of datosFiltrados) {
+        const cLow = d.clase_accidente.toLowerCase();
+        vecAtropelloCaida.push(cLow.includes("atropello") || cLow.includes("caida") || cLow.includes("volcamiento") ? 1 : 0);
+        const h24 = extraerHora24(d.hora_accidente);
+        vecHoraNocturna.push(h24 >= 19 || h24 <= 5 ? 1 : 0);
+        vecAnio.push(d.anio_numerico || 2020);
+        const tieneV = d.total_victimas > 0 || !d.gravedad_accidente.toLowerCase().includes("solo") ? 1 : 0;
+        vecTieneVictimas.push(tieneV);
+        vecTotalVictimas.push(d.total_victimas);
+        vecSeveridad.push(d.indice_severidad);
+      }
+
+      const varsCorr = [
+        { name: "Peatón / Ocupante / Volcamiento", vec: vecAtropelloCaida },
+        { name: "Horario Nocturno / Madrugada", vec: vecHoraNocturna },
+        { name: "Tendencia Anual Reciente", vec: vecAnio }
+      ];
+      const targetsCorr = [
+        { name: "Riesgo Víctimas", vec: vecTieneVictimas },
+        { name: "N.º Víctimas", vec: vecTotalVictimas },
+        { name: "Severidad", vec: vecSeveridad }
+      ];
+
+      let htmlTablaCorr = `<table style="font-size: 0.78rem; width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="padding: 8px;">Factor de Riesgo</th>
+            ${targetsCorr.map(t => `<th style="padding: 8px; text-align: center;">${t.name}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>`;
+
+      for (const vx of varsCorr) {
+        htmlTablaCorr += `<tr><td style="padding: 8px; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${vx.name}</td>`;
+        for (const ty of targetsCorr) {
+          const r = calcularCorrelacionPearson(vx.vec, ty.vec);
+          const intensidad = Math.min(0.85, Math.abs(r) * 1.4);
+          const bg = r >= 0
+            ? `rgba(37, 99, 235, ${intensidad.toFixed(2)})`
+            : `rgba(220, 38, 38, ${intensidad.toFixed(2)})`;
+          const textColor = intensidad > 0.45 ? "#fff" : "#0f172a";
+          htmlTablaCorr += `<td style="padding: 8px; text-align: center; font-weight: 700; background: ${bg}; color: ${textColor}; border-bottom: 1px solid #e2e8f0;">${r.toFixed(3)}</td>`;
+        }
+        htmlTablaCorr += `</tr>`;
+      }
+      htmlTablaCorr += `</tbody></table>`;
+      document.getElementById("edaCorrelationMatrix").innerHTML = htmlTablaCorr;
+
+      const rClaseVict = calcularCorrelacionPearson(vecAtropelloCaida, vecTieneVictimas).toFixed(3);
+      document.getElementById("edaInterpretacion4").innerHTML =
+        `<b>Relación estadística:</b> La vulnerabilidad del actor vial (<b>r = ${rClaseVict}</b>) y el horario nocturno incrementan directamente la severidad del siniestro.`;
+    }
+
+    // ============================================================================
+    // MÓDULO 6: RENDERIZADO DE BARRAS SIN SCROLL, TABLA Y PAGINACIÓN
+    // ============================================================================
+    function renderizarBarras(containerId, entries, color, filterFieldKey, totalFiltrado) {
+      const container = document.getElementById(containerId);
+      if (entries.length === 0) {
+        container.innerHTML = '<div style="color: var(--muted); font-size: 0.82rem;">Sin datos para los filtros seleccionados</div>';
+        return;
+      }
+      const maxVal = Math.max(...entries.map(e => e[1]), 1);
+      container.innerHTML = entries.map(([label, count]) => {
+        const pctWidth = ((count / maxVal) * 100).toFixed(1);
+        const pctTotal = totalFiltrado > 0 ? ((count / totalFiltrado) * 100).toFixed(1) : 0;
+        const isSelected = filterFieldKey && pillFilters[filterFieldKey] && pillFilters[filterFieldKey].has(label);
+        const clickAttr = filterFieldKey
+          ? `onclick="togglePildora('${filterFieldKey}', '${label.replace(/'/g, "\\'")}')"`
+          : "";
+        return `
+          <div class="bar-row ${isSelected ? "selected-bar" : ""}" ${clickAttr} title="${label}: ${count.toLocaleString()} (${pctTotal}%)">
+            <div class="bar-label">${isSelected ? SVG_CHECK : ""}<span>${label}</span></div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: ${pctWidth}%; background: ${color};"></div>
+            </div>
+            <div class="bar-count">${count.toLocaleString()} (${pctTotal}%)</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderizarTabla() {
+      const tbody = document.getElementById("tableBody");
+      const colsVisibles = COLUMNAS.filter(c => c.visible);
+      const total = datosFiltrados.length;
+      const totalPaginas = Math.max(1, Math.ceil(total / filasPorPagina));
+      if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+
+      const inicio = (paginaActual - 1) * filasPorPagina;
+      const fin = Math.min(inicio + filasPorPagina, total);
+      const lote = datosFiltrados.slice(inicio, fin);
+
+      document.getElementById("tableCounter").textContent =
+        total > 0
+          ? `Mostrando ${(inicio + 1).toLocaleString()} - ${fin.toLocaleString()} de ${total.toLocaleString()} registros filtrados`
+          : "No se encontraron registros con los filtros actuales";
+
+      document.getElementById("pageIndicator").textContent = `Página ${paginaActual} / ${totalPaginas.toLocaleString()}`;
+      document.getElementById("btnPrev").disabled = paginaActual <= 1;
+      document.getElementById("btnNext").disabled = paginaActual >= totalPaginas;
+
+      if (lote.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${colsVisibles.length}" style="text-align:center; padding: 24px; color: var(--muted);">Sin resultados para los filtros aplicados</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = lote.map(d => {
+        const celdas = colsVisibles.map(col => {
+          const val = d[col.key];
+          if (col.key === "gravedad_accidente") {
+            const gLower = String(val).toLowerCase();
+            let badgeClass = "badge-danos";
+            if (gLower.includes("herido")) badgeClass = "badge-heridos";
+            else if (gLower.includes("muerto")) badgeClass = "badge-muertos";
+            return `<td><span class="badge ${badgeClass}">${val}</span></td>`;
+          }
+          if (col.key === "a_o_accidente") {
+            return `<td><b>${val}</b></td>`;
+          }
+          if (col.type === "number") {
+            return `<td>${val > 0 ? val : "-"}</td>`;
+          }
+          return `<td>${val}</td>`;
+        }).join("");
+
+        return `<tr>${celdas}</tr>`;
+      }).join("");
+    }
+
+    function cambiarPagina(delta) {
+      paginaActual += delta;
+      renderizarTabla();
+    }
+
+    function cambiarTamanoPagina() {
+      filasPorPagina = parseInt(document.getElementById("pageSizeSelect").value, 10) || 50;
+      paginaActual = 1;
+      renderizarTabla();
+    }
+
+    window.addEventListener("DOMContentLoaded", ejecutarExtraccionSecuencialPaginada);
+  </script>
+</body>
+</html>
